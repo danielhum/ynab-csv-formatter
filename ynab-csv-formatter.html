@@ -170,10 +170,12 @@
             } else if (i == 0) {
               newLines.push(line + ",Memo"); // add memo header
             } else if (line.length > 0) {
-              console.log(line);
-              newLine = line.replace(/"([0-9,\.]+)"/, RegExp.$1.replace(",","")); // TODO: not parsing the last line in the current file correctly!
-              console.log(newLine);
-              newLines.push(newLine + ","); // add memo field 
+              match = line.match(/"[0-9,\.]+"/)
+              if (match != null) {
+                priceQuot = line.match(/"[0-9,\.]+"/)[0]
+                line = line.replace(priceQuot, priceQuot.replace(",",""));
+              }
+              newLines.push(line + ","); // add memo field 
             }
           });
           let output = newLines.join("\n");
