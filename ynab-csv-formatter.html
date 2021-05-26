@@ -15,7 +15,8 @@
         if (/\.xlsx?$/.test(filename)) {
           parseXLSX(file);
         } else {
-          parseCSV(file);
+          parseOcbc(file);
+          //parseCSV(file, "amex_cc");
         }
       }
 
@@ -121,7 +122,30 @@
         return { data: data, errors: errors };
       }
 
-      function parseCSV(csvFile) {
+      // handles OCBC non-standard content
+      function parseOcbc(file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          let lines = event.target.result.split(/\r\n|\n/);
+          var newLines = [];
+          console.log(`cleaning ${lines.length} lines`);
+          lines.forEach((line, i) => {
+            if (line.startsWith(",,")) {
+              var prevLine = newLines[newLines.length-1].split(',');
+              prevLine[2] = `"${prevLine[2]} ${line.substring(2)}"` // combine payee
+              newLines[newLines.length-1] = prevLine.join(",");
+            } else if (line.length > 0) {
+              newLines.push(line);
+            }
+          });
+          let output = newLines.join("\n");
+          parseCSV(output, "ocbc");
+        }
+        reader.readAsText(file);
+        return;
+      }
+
+      function parseCSV(csvFile, bank = "amex_cc") {
         console.log("parseCSV");
 
         let accountMetas = {
@@ -135,10 +159,11 @@
             "dateHeader": "Date",
             "payeeHeader": "Payee",
             "debitHeader": "Outflow",
-            "creditHeader": ""
+            "creditHeader": "",
+            "memoHeader": "Memo"
           }
         }
-        meta = accountMetas["ocbc"];
+        meta = accountMetas[bank];
         Papa.parse(csvFile, {
           delimiter: ",",
           comments: "#",
@@ -154,6 +179,8 @@
                 return "Outflow";
               case meta["creditHeader"]:
                 return "Inflow";
+              case meta["memoHeader"]:
+                return "Memo";
               default:
                 // ignore
                 //alert("unrecognized header!");
