@@ -118,8 +118,39 @@
                 return true;
               }
         });
-        data.forEach(el => { el["Memo"] = "" });
+        //data.forEach(el => { el["Memo"] = "" });
         return { data: data, errors: errors };
+      }
+
+      function ocbcProcessPayeeAndMemo(originalPayee, desc) {
+        const regex1 = /^to (?<payee>.+) via PayNow-\w+ OTHR - (?<memo>.+)/mg;
+        const regex2 = /^OTHR( -)? (?<memo>.+) (to|from) (?<payee>.+) via PayNow/mg;
+        const regex3 = /^OTHR( -)? (?<memo>.+) (to|from) (?<payee>.+)/mg;
+        var payee = "";
+        var memo = "";
+        switch(originalPayee) {
+          case "PAYMENT/TRANSFER":
+          case "FAST PAYMENT":
+          case "FUND TRANSFER":
+            let match = regex1.exec(desc);
+            if (match == null) {
+              match = regex2.exec(desc);
+            }
+            if (match == null) {
+              match = regex3.exec(desc);
+            }
+            if (match.groups.payee) payee = `"${match.groups.payee}"`;
+            if (match.groups.memo) memo = `"${match.groups.memo}"`;
+            break;
+          case "GIRO":
+          default:
+            payee = `"${originalPayee} ${desc}"`
+            memo = ""
+        }
+        return {
+          payee: payee,
+          memo: memo
+        }
       }
 
       // handles OCBC non-standard content
@@ -131,11 +162,18 @@
           console.log(`cleaning ${lines.length} lines`);
           lines.forEach((line, i) => {
             if (line.startsWith(",,")) {
-              var prevLine = newLines[newLines.length-1].split(',');
-              prevLine[2] = `"${prevLine[2]} ${line.substring(2)}"` // combine payee
+              var prevLine = newLines[newLines.length-1].split(",");
+              const {payee, memo} = ocbcProcessPayeeAndMemo(prevLine[2], line.substring(2));
+              prevLine[2] = payee
+              prevLine[5] = memo
               newLines[newLines.length-1] = prevLine.join(",");
+            } else if (i == 0) {
+              newLines.push(line + ",Memo"); // add memo header
             } else if (line.length > 0) {
-              newLines.push(line);
+              console.log(line);
+              newLine = line.replace(/"([0-9,\.]+)"/, RegExp.$1.replace(",","")); // TODO: not parsing the last line in the current file correctly!
+              console.log(newLine);
+              newLines.push(newLine + ","); // add memo field 
             }
           });
           let output = newLines.join("\n");
@@ -153,7 +191,8 @@
             "dateHeader": "Transaction date",
             "payeeHeader": "Description",
             "debitHeader": "Withdrawals (SGD)",
-            "creditHeader": "Deposits (SGD)"
+            "creditHeader": "Deposits (SGD)",
+            "memoHeader": "Memo"
           },
           "amex_cc" : {
             "dateHeader": "Date",
@@ -182,11 +221,12 @@
               case meta["memoHeader"]:
                 return "Memo";
               default:
-                // ignore
-                //alert("unrecognized header!");
+                return "unknown_header";
+
             }
           },
           complete: function(results) {
+            console.log("parse CSV results:");
             console.log(results);
             processed = handleParseCSVResults(results);
             if (processed.errors.length > 0) {
