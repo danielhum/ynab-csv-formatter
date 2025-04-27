@@ -18,7 +18,7 @@ const XLSParser = {
       const processed = this._processSheet(sheet);
       
       if (processed.length === 0) {
-        alert("Couldn't parse file!");
+        alert("Couldn't parse file! Please ensure you've selected the correct bank type.");
         return;
       }
       
@@ -36,18 +36,19 @@ const XLSParser = {
    * @private
    */
   _processSheet: function(sheet) {
-    const accountTypes = Object.keys(BankConfig.getAccountMeta("uob_deposit"));
+    const accountTypes = BankConfig.getAvailableBanks();
     let processed = [];
-    let accountType = null;
-    let meta = null;
     
-    for (let i = 0; processed.length === 0; i++) {
-      accountType = accountTypes[i];
-      meta = BankConfig.getAccountMeta(accountType);
+    // Use a for loop to iterate over the accountTypes array
+    for (let i = 0; i < accountTypes.length; i++) {
+      const accountType = accountTypes[i];
+      const meta = BankConfig.getAccountMeta(accountType);
       
       if (!meta) continue;
       
       const headers = meta["headers"];
+      if (!headers) continue;
+      
       const json = XLSX.utils.sheet_to_json(sheet, { header: headers });
       
       processed = json.filter((row) => {
@@ -57,6 +58,15 @@ const XLSParser = {
         
         return ((date && date !== "NaN") && (withdrawal || deposit));
       });
+      
+      // If we found valid data, break out of the loop
+      if (processed.length > 0) {
+        break;
+      }
+    }
+    
+    if (processed.length === 0) {
+      console.error("No valid data found in the sheet for any bank type");
     }
     
     return processed;

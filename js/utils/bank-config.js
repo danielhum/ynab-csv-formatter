@@ -17,9 +17,21 @@ const BankConfig = {
         return "Date";
       case "dbs":
         return "Transaction Date";
+      case "uob":
+      case "uob_deposit":
+      case "uob_cc":
+        return "Transaction Date";
       default:
         return "";
     }
+  },
+
+  /**
+   * Get all available bank identifiers
+   * @returns {Array} - List of bank identifiers
+   */
+  getAvailableBanks: function() {
+    return Object.keys(this.accountMetas);
   },
 
   /**
@@ -28,73 +40,7 @@ const BankConfig = {
    * @returns {Object} - The account metadata
    */
   getAccountMeta: function(bank) {
-    const accountMetas = {
-      "ocbc": {
-        "dateHeader": "Transaction date",
-        "payeeHeader": "Description",
-        "debitHeader": "Withdrawals(SGD)",
-        "creditHeader": "Deposits(SGD)",
-        "memoHeader": "Memo"
-      },
-      "ocbc_cc": {
-        "dateHeader": "Transaction date",
-        "payeeHeader": "Description",
-        "debitHeader": "Withdrawals (SGD)",
-        "creditHeader": "Deposits (SGD)",
-        "memoHeader": "Memo"
-      },
-      "amex_cc": {
-        "dateHeader": "Date",
-        "payeeHeader": "Description",
-        "debitHeader": "Amount",
-        "creditHeader": "",
-        "memoHeader": ""
-      },
-      "sc_bank": {
-        "dateHeader": "Date",
-        "payeeHeader": "DESCRIPTION",
-        "debitHeader": "SGD Amount",
-        "creditHeader": "",
-        "memoHeader": "Foreign Currency Amount"
-      },
-      "dbs": {
-        "dateHeader": "Date",
-        "payeeHeader": "Payee",
-        "debitHeader": "Outflow",
-        "creditHeader": "Inflow",
-        "memoHeader": "Memo"
-      },
-      "uob_deposit": {
-        "headers": [
-          "Transaction Date",
-          "Transaction Description",
-          "Withdrawal",
-          "Deposit",
-          "Available Balance"
-        ],
-        "dateHeader": "Transaction Date",
-        "payeeHeader": "Transaction Description",
-        "debitHeader": "Withdrawal",
-        "creditHeader": "Deposit"
-      },
-      "uob_cc": {
-        "headers": [
-          "Transaction Date",
-          "Posting Date",
-          "Description",
-          "Foreign Currency Type",
-          "Transaction Amount(Foreign)",
-          "Local Currency Type",
-          "Transaction Amount(Local)",
-        ],
-        "dateHeader": "Transaction Date",
-        "payeeHeader": "Description",
-        "debitHeader": "Transaction Amount(Local)",
-        "creditHeader": null
-      }
-    };
-
-    return accountMetas[bank] || null;
+    return this.accountMetas[bank] || null;
   },
 
   /**
@@ -119,6 +65,82 @@ const BankConfig = {
         return "Memo";
       default:
         return "unknown_header";
+    }
+  },
+
+  /**
+   * Account metadata for all supported banks
+   */
+  accountMetas: {
+    "ocbc": {
+      "dateHeader": "Transaction date",
+      "payeeHeader": "Description",
+      "debitHeader": "Withdrawals(SGD)",
+      "creditHeader": "Deposits(SGD)",
+      "memoHeader": "Memo"
+    },
+    "ocbc_cc": {
+      "dateHeader": "Transaction date",
+      "payeeHeader": "Description",
+      "debitHeader": "Withdrawals (SGD)",
+      "creditHeader": "Deposits (SGD)",
+      "memoHeader": "Memo"
+    },
+    "amex_cc": {
+      "dateHeader": "Date",
+      "payeeHeader": "Description",
+      "debitHeader": "Amount",
+      "creditHeader": "",
+      "memoHeader": ""
+    },
+    "sc_bank": {
+      "dateHeader": "Date",
+      "payeeHeader": "DESCRIPTION",
+      "debitHeader": "SGD Amount",
+      "creditHeader": "",
+      "memoHeader": "Foreign Currency Amount"
+    },
+    "dbs": {
+      "dateHeader": "Date",
+      "payeeHeader": "Payee",
+      "debitHeader": "Outflow",
+      "creditHeader": "Inflow",
+      "memoHeader": "Memo"
+    },
+    "uob": {
+      "dateHeader": "Transaction Date",
+      "payeeHeader": "Transaction Description",
+      "debitHeader": "Withdrawal",
+      "creditHeader": "Deposit",
+      "memoHeader": "Available Balance"
+    },
+    "uob_deposit": {
+      "headers": [
+        "Transaction Date",
+        "Transaction Description",
+        "Withdrawal",
+        "Deposit",
+        "Available Balance"
+      ],
+      "dateHeader": "Transaction Date",
+      "payeeHeader": "Transaction Description",
+      "debitHeader": "Withdrawal",
+      "creditHeader": "Deposit"
+    },
+    "uob_cc": {
+      "headers": [
+        "Transaction Date",
+        "Posting Date",
+        "Description",
+        "Foreign Currency Type",
+        "Transaction Amount(Foreign)",
+        "Local Currency Type",
+        "Transaction Amount(Local)",
+      ],
+      "dateHeader": "Transaction Date",
+      "payeeHeader": "Description",
+      "debitHeader": "Transaction Amount(Local)",
+      "creditHeader": null
     }
   }
 };

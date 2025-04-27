@@ -44,7 +44,12 @@ const CSVParser = {
         return AmexFormatter.format(lines);
       case "dbs":
         return DBSFormatter.format(lines);
+      case "uob":
+      case "uob_deposit":
+      case "uob_cc":
+        return UOBFormatter.format(lines);
       default:
+        console.warn(`No formatter found for bank: ${bank}`);
         return lines;
     }
   },
