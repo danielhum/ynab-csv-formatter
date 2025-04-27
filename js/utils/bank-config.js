@@ -21,6 +21,8 @@ const BankConfig = {
       case "uob_deposit":
       case "uob_cc":
         return "Transaction Date";
+      case "citibank_cc":
+        return ""; // Citibank CSV has no headers
       default:
         return "";
     }
@@ -141,6 +143,13 @@ const BankConfig = {
       "payeeHeader": "Description",
       "debitHeader": "Transaction Amount(Local)",
       "creditHeader": null
+    },
+    "citibank_cc": {
+      "dateHeader": "Date",
+      "payeeHeader": "Payee",
+      "debitHeader": "Outflow",
+      "creditHeader": "Inflow",
+      "memoHeader": "Memo"
     }
   }
 };
