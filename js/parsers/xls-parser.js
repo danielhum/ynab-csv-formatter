@@ -23,6 +23,7 @@ const XLSParser = {
       }
       
       const outData = this._formatData(processed, matchedAccountType);
+      DataUtils.cleanData(outData);
       this._saveToCSV(outData, file.name);
     };
     
@@ -90,6 +91,7 @@ const XLSParser = {
       return outData;
     }
     
+    // Check if this is a UOB account type
     const isUOB = accountType === "uob" || accountType === "uob_deposit" || accountType === "uob_cc";
     
     processed.forEach((element) => {
@@ -117,7 +119,7 @@ const XLSParser = {
       const payment = typeof outflow === "number" && outflow > 0;
       
       if (payee.match(/\bfee\b/i) !== null && payment) {
-        console.warn("Fee detected!");
+        console.warn("Fee detected!", formattedDate, payee, outflow, inflow);
       }
       
       outData.push({

@@ -69,7 +69,7 @@ function handleParseCSVResults(results) {
     if (payee === null || payee === undefined) {
       console.warn("Null payee encountered");
     } else if (payee.match(/\bfee\b/i) !== null && payment) {
-      console.warn("Fee detected!");
+      console.warn("Fee detected!", el["Date"], payee, outflow, el["Inflow"]);
     }
   });
 
