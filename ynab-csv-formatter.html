@@ -1,49 +1,127 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>YNAB CSV Formatter</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      label {
+        font-weight: bold;
+      }
+      select, input[type="file"] {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .instructions {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        border-left: 4px solid #2c3e50;
+      }
+    </style>
+    <!-- Third-party libraries -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="papaparse.min.js"></script>
-    <script src="./format-ocbc.js"></script>
-    <script src="./format-sc-bank.js"></script>
-    <script src="./format-amex.js"></script>
-    <script src="./parse-csv.js"></script>
-    <script src="./parse-xls.js"></script>
+    <script src="lib/papaparse.min.js"></script>
+    
+    <!-- Utility modules -->
+    <script src="js/utils/file-utils.js"></script>
+    <script src="js/utils/data-utils.js"></script>
+    <script src="js/utils/bank-config.js"></script>
+    
+    <!-- Bank formatters -->
+    <script src="js/formatters/ocbc-formatter.js"></script>
+    <script src="js/formatters/sc-bank-formatter.js"></script>
+    <script src="js/formatters/amex-formatter.js"></script>
+    <script src="js/formatters/dbs-formatter.js"></script>
+    
+    <!-- Parsers -->
+    <script src="js/parsers/csv-parser.js"></script>
+    <script src="js/parsers/xls-parser.js"></script>
+    
     <script>
+      /**
+       * Get the selected bank from the dropdown
+       * @returns {string} - The selected bank identifier
+       */
       function getBank() {
-        var sel = document.getElementById("selectBank");
-        return sel.getElementsByTagName("option")[sel.selectedIndex].value;
+        const sel = document.getElementById("selectBank");
+        return sel.options[sel.selectedIndex].value;
       }
 
+      /**
+       * Parse the uploaded file
+       * @param {HTMLInputElement} input - The file input element
+       */
       function parseFile(input) {
         if (!(input.files && input.files[0])) {
-          console.log("File not found!");
+          console.error("File not found!");
           return;
         }
-        var file = input.files[0];
-        var filename = file.name;
-        let bank = getBank();
+        
+        const file = input.files[0];
+        const filename = file.name;
+        const bank = getBank();
 
         try {
           if (/\.xlsx?$/.test(filename)) {
-            parseXLSX(file);
+            XLSParser.parse(file);
           } else if (/\.csv?$/.test(filename)) {
-            sanitizeAndParseCSV(file, bank);
+            CSVParser.sanitizeAndParse(file, bank);
+          } else {
+            alert("Unsupported file format. Please upload a CSV or Excel file.");
           }
-        }
-        catch(err) {
-          alert(err + "\n\nPerhaps wrong bank selected?");
+        } catch(err) {
+          console.error(err);
+          alert("Error processing file. Perhaps wrong bank selected?");
         }
       }
-
     </script>
   </head>
   <body>
-    <input type="file" id="fileSelector" onchange="parseFile(this)" />
-    <select id="selectBank" onchange="document.getElementById('fileSelector').onchange();">
-      <option value="ocbc">OCBC (csv)</option>
-      <option value="amex_cc">Amex Credit Card (csv)</option>
-      <option value="uob">UOB (xlsx)</option>
-      <option value="sc_bank">Standard Chartered (csv)</option>
-    </select>
+    <h1>YNAB CSV Formatter</h1>
+    
+    <div class="instructions">
+      <p>This tool converts bank statements from various banks into YNAB-compatible CSV format.</p>
+      <p>Select your bank and upload your statement file (CSV or Excel). The tool will automatically convert and download the formatted file.</p>
+    </div>
+    
+    <div class="container">
+      <div class="form-group">
+        <label for="selectBank">Select Bank:</label>
+        <select id="selectBank" onchange="document.getElementById('fileSelector').onchange();">
+          <option value="ocbc">OCBC (deposit accounts)</option>
+          <option value="ocbc_cc">OCBC Credit Card</option>
+          <option value="amex_cc">Amex Credit Card</option>
+          <option value="uob">UOB (deposit accounts)</option>
+          <option value="sc_bank">Standard Chartered</option>
+          <option value="dbs">DBS</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="fileSelector">Upload Statement:</label>
+        <input type="file" id="fileSelector" onchange="parseFile(this)" accept=".csv,.xlsx,.xls" />
+      </div>
+    </div>
   </body>
 </html>
