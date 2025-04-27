@@ -38,6 +38,23 @@
         border-radius: 4px;
         border-left: 4px solid #2c3e50;
       }
+      button {
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      button:hover {
+        background-color: #34495e;
+      }
+      button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
     </style>
     <!-- Third-party libraries -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
@@ -96,6 +113,32 @@
           alert("Error processing file. Please ensure you've selected the correct bank type.");
         }
       }
+      
+      /**
+       * Handle form submission
+       */
+      function handleSubmit() {
+        const fileInput = document.getElementById('fileSelector');
+        if (fileInput.files && fileInput.files[0]) {
+          parseFile(fileInput);
+        } else {
+          alert("Please select a file first.");
+        }
+      }
+      
+      /**
+       * Enable/disable submit button based on file selection
+       */
+      function updateSubmitButton() {
+        const fileInput = document.getElementById('fileSelector');
+        const submitButton = document.getElementById('submitButton');
+        
+        if (fileInput.files && fileInput.files[0]) {
+          submitButton.disabled = false;
+        } else {
+          submitButton.disabled = true;
+        }
+      }
     </script>
   </head>
   <body>
@@ -103,13 +146,13 @@
     
     <div class="instructions">
       <p>This tool converts bank statements from various banks into YNAB-compatible CSV format.</p>
-      <p>Select your bank and upload your statement file (CSV or Excel). The tool will automatically convert and download the formatted file.</p>
+      <p>Select your bank and upload your statement file (CSV or Excel). Click the Convert button to process and download the formatted file.</p>
     </div>
     
     <div class="container">
       <div class="form-group">
         <label for="selectBank">Select Bank:</label>
-        <select id="selectBank" onchange="document.getElementById('fileSelector').onchange();">
+        <select id="selectBank">
           <option value="ocbc">OCBC (deposit accounts)</option>
           <option value="ocbc_cc">OCBC Credit Card</option>
           <option value="amex_cc">Amex Credit Card</option>
@@ -122,8 +165,10 @@
       
       <div class="form-group">
         <label for="fileSelector">Upload Statement:</label>
-        <input type="file" id="fileSelector" onchange="parseFile(this)" accept=".csv,.xlsx,.xls" />
+        <input type="file" id="fileSelector" onchange="updateSubmitButton()" accept=".csv,.xlsx,.xls" />
       </div>
+      
+      <button id="submitButton" onclick="handleSubmit()" disabled>Convert to YNAB Format</button>
     </div>
   </body>
 </html>
