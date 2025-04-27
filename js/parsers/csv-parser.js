@@ -47,7 +47,8 @@ const CSVParser = {
       case "uob":
       case "uob_deposit":
       case "uob_cc":
-        return UOBFormatter.format(lines);
+        alert("UOB CSV format not supported yet! (only XLS)");
+        return lines;
       default:
         console.warn(`No formatter found for bank: ${bank}`);
         return lines;

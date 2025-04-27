@@ -90,11 +90,30 @@ const XLSParser = {
       return outData;
     }
     
+    const isUOB = accountType === "uob" || accountType === "uob_deposit" || accountType === "uob_cc";
+    
     processed.forEach((element) => {
       const date = new Date(Date.parse(element[meta.dateHeader]));
       const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-      const payee = DataUtils.cleanText(element[meta.payeeHeader]);
       const outflow = element[meta.debitHeader];
+      const inflow = element[meta.creditHeader];
+      
+      let payee = DataUtils.cleanText(element[meta.payeeHeader]);
+      let memo = "";
+      
+      // Apply UOB-specific formatting if needed
+      if (isUOB) {
+        const formattedRow = UOBFormatter.format([{
+          date: formattedDate,
+          payee: payee,
+          outflow: outflow,
+          inflow: inflow
+        }])[0];
+        
+        payee = formattedRow.payee;
+        memo = formattedRow.memo;
+      }
+      
       const payment = typeof outflow === "number" && outflow > 0;
       
       if (payee.match(/\bfee\b/i) !== null && payment) {
@@ -104,9 +123,9 @@ const XLSParser = {
       outData.push({
         "Date": formattedDate,
         "Payee": payee,
-        "Memo": "",
-        "Outflow": element[meta.debitHeader],
-        "Inflow": element[meta.creditHeader],
+        "Memo": memo,
+        "Outflow": outflow,
+        "Inflow": inflow,
       });
     });
     
