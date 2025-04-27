@@ -66,7 +66,7 @@ function handleParseCSVResults(results) {
     const outflow = el["Outflow"];
     const payment = typeof outflow === "number" && outflow > 0;
     
-    if (payee === null) {
+    if (payee === null || payee === undefined) {
       console.warn("Null payee encountered");
     } else if (payee.match(/\bfee\b/i) !== null && payment) {
       console.warn("Fee detected!");
