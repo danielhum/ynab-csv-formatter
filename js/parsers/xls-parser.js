@@ -15,14 +15,14 @@ const XLSParser = {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       
-      const processed = this._processSheet(sheet);
+      const { processed, matchedAccountType } = this._processSheet(sheet);
       
       if (processed.length === 0) {
         alert("Couldn't parse file! Please ensure you've selected the correct bank type.");
         return;
       }
       
-      const outData = this._formatData(processed);
+      const outData = this._formatData(processed, matchedAccountType);
       this._saveToCSV(outData, file.name);
     };
     
@@ -32,12 +32,13 @@ const XLSParser = {
   /**
    * Process XLSX sheet
    * @param {Object} sheet - The XLSX sheet
-   * @returns {Array} - The processed data
+   * @returns {Object} - The processed data and matched account type
    * @private
    */
   _processSheet: function(sheet) {
     const accountTypes = BankConfig.getAvailableBanks();
     let processed = [];
+    let matchedAccountType = null;
     
     // Use a for loop to iterate over the accountTypes array
     for (let i = 0; i < accountTypes.length; i++) {
@@ -61,6 +62,7 @@ const XLSParser = {
       
       // If we found valid data, break out of the loop
       if (processed.length > 0) {
+        matchedAccountType = accountType;
         break;
       }
     }
@@ -69,18 +71,24 @@ const XLSParser = {
       console.error("No valid data found in the sheet for any bank type");
     }
     
-    return processed;
+    return { processed, matchedAccountType };
   },
 
   /**
    * Format data for YNAB
    * @param {Array} processed - The processed data
+   * @param {string} accountType - The matched account type
    * @returns {Array} - The formatted data
    * @private
    */
-  _formatData: function(processed) {
+  _formatData: function(processed, accountType) {
     const outData = [];
-    const meta = BankConfig.getAccountMeta("uob_deposit");
+    const meta = BankConfig.getAccountMeta(accountType);
+    
+    if (!meta) {
+      console.error("Account metadata not found for:", accountType);
+      return outData;
+    }
     
     processed.forEach((element) => {
       const date = new Date(Date.parse(element[meta.dateHeader]));
